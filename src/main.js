@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import Car from "./js/car.js";
 import Background from "./js/background.js";
+import Tree from "./js/tree.js";
 
 init();
 
