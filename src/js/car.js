@@ -7,8 +7,14 @@ export default class Car {
     this.createBody();
     this.createWheels();
 
-    // Listen for key presses to move the car
-    window.addEventListener("keydown", (event) => this.onKeyPress(event));
+    // Listen to multiple keys pressed simultaneously
+    this.keysPressed = {};
+    window.addEventListener("keydown", (event) => {
+      this.keysPressed[event.key.toLowerCase()] = true;
+    });
+    window.addEventListener("keyup", (event) => {
+      this.keysPressed[event.key.toLowerCase()] = false;
+    });
   }
 
   createBody() {
@@ -42,17 +48,21 @@ export default class Car {
     return this.group;
   }
 
-  onKeyPress(event) {
-    const key = event.key.toLowerCase();
-    const step = 0.3;
-    if (key === "w") {
-      this.group.position.z -= step; // Move forward
-    } else if (key === "s") {
-      this.group.position.z += step; // Move backward
-    } else if (key === "a") {
-      this.group.position.x -= step; // Move left
-    } else if (key === "d") {
-      this.group.position.x += step; // Move right
+  updateMovement() {
+    const step = 0.1;
+    if (this.keysPressed["w"]) {
+      this.group.position.z -= step;
     }
+    if (this.keysPressed["s"]) {
+      this.group.position.z += step;
+    }
+    if (this.keysPressed["a"]) {
+      this.group.position.x -= step;
+    }
+    if (this.keysPressed["d"]) {
+      this.group.position.x += step;
+    }
+    // Clamp position to road width (-5 to 5)
+    this.group.position.x = Math.max(-5, Math.min(5, this.group.position.x));
   }
 }

@@ -46,6 +46,7 @@ function init() {
   // render loop
   function animate() {
     requestAnimationFrame(animate);
+    car.updateMovement();
     renderer.render(scene, camera);
   }
   animate();
