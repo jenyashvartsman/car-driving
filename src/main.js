@@ -33,7 +33,7 @@ function init() {
   camera.lookAt(0, 0, 0);
 
   // view car from the side
-  camera.position.x = 5;
+  camera.position.y = 5;
   camera.lookAt(car.getObject3D().position);
 
   // add light
@@ -51,12 +51,13 @@ function init() {
   }
   animate();
 
-  // animate background
+  // animate background only when car is moving
   const clock = new THREE.Clock();
   function animateBackground() {
     requestAnimationFrame(animateBackground);
     const delta = clock.getDelta();
-    background.update(delta);
+    // Pass car's z position so road follows car
+    background.update(delta, car.speed, car.getObject3D().position.z);
   }
   animateBackground();
 
@@ -66,4 +67,17 @@ function init() {
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
+
+  // handle camera follow car
+  function updateCamera() {
+    requestAnimationFrame(updateCamera);
+    camera.position.z +=
+      (car.getObject3D().position.z + 9 - camera.position.z) * 0.05;
+    // Smoothly follow the car's x position
+    camera.position.x +=
+      (car.getObject3D().position.x - camera.position.x) * 0.05;
+    camera.lookAt(car.getObject3D().position);
+    // block camera going back too far
+  }
+  updateCamera();
 }

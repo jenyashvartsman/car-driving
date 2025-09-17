@@ -7,6 +7,13 @@ export default class Car {
     this.createBody();
     this.createWheels();
 
+    // Speed properties
+    this.speed = 0;
+    this.minSpeed = -0.1; // allow reverse, slower
+    this.maxSpeed = 0.2; // slower max speed
+    this.acceleration = 0.015;
+    this.deceleration = 0.01;
+
     // Listen to multiple keys pressed simultaneously
     this.keysPressed = {};
     window.addEventListener("keydown", (event) => {
@@ -49,20 +56,50 @@ export default class Car {
   }
 
   updateMovement() {
-    const step = 0.1;
+    // Accelerate/decelerate
     if (this.keysPressed["w"]) {
-      this.group.position.z -= step;
+      this.speed += this.acceleration;
+    } else if (this.keysPressed["s"]) {
+      this.speed -= this.acceleration;
+    } else {
+      // Smoothly decelerate to zero
+      if (Math.abs(this.speed) > 0) {
+        if (this.speed > 0) {
+          this.speed -= this.deceleration;
+          if (this.speed < 0.01) this.speed = 0;
+        } else if (this.speed < 0) {
+          this.speed += this.deceleration;
+          if (this.speed > -0.01) this.speed = 0;
+        }
+      }
     }
-    if (this.keysPressed["s"]) {
-      this.group.position.z += step;
-    }
+    // Clamp speed
+    this.speed = Math.max(this.minSpeed, Math.min(this.maxSpeed, this.speed));
+
+    // Move forward/backward by speed
+    this.group.position.z -= this.speed;
+
+    // Expose stopped state for external use (e.g., background)
+    this.stopped = this.speed === 0;
+
+    // Left/right movement (instant, not speed-based)
+    const step = 0.08;
     if (this.keysPressed["a"]) {
       this.group.position.x -= step;
     }
     if (this.keysPressed["d"]) {
       this.group.position.x += step;
     }
-    // Clamp position to road width (-5 to 5)
-    this.group.position.x = Math.max(-5, Math.min(5, this.group.position.x));
+    // Clamp position to road width (-2.2 to 2.2)
+    this.group.position.x = Math.max(
+      -2.2,
+      Math.min(2.2, this.group.position.x)
+    );
+
+    // Update speed display in UI as KPH
+    const speedDisplay = document.getElementById("speed");
+    if (speedDisplay) {
+      speedDisplay.textContent = (this.speed * 500).toFixed(2);
+    }
   }
 }

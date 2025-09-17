@@ -3,10 +3,11 @@ import * as THREE from "three";
 export default class Background {
   constructor(scene, options = {}) {
     this.scene = scene;
-    this.speed = options.speed || 0.05;
+    this.speed = options.speed || 0.05; // fallback, but will be set dynamically
 
     // Make these global to the class
-    this.roadGeometry = new THREE.PlaneGeometry(10, 100);
+    this.roadLength = 300;
+    this.roadGeometry = new THREE.PlaneGeometry(10, this.roadLength);
     this.roadMaterial = new THREE.ShaderMaterial({
       uniforms: {
         time: { value: 0.0 },
@@ -54,21 +55,25 @@ export default class Background {
 
     // Add trees
     this.trees = [];
-    this.treeCount = 30;
-    this.roadLength = 100;
+    this.treeCount = 60;
     this.spawnTrees();
   }
 
-  update(delta) {
+  update(delta, carSpeed = null, carZ = 0) {
+    // Use carSpeed if provided, otherwise fallback to this.speed
+    const effectiveSpeed = carSpeed !== null ? carSpeed : this.speed;
     // Animate the road lines to simulate movement
-    this.material.uniforms.time.value += this.speed * delta;
+    this.material.uniforms.time.value += effectiveSpeed * delta;
 
-    // Move trees toward the camera
+    // Move the road mesh to follow the car's z position
+    this.road.position.z = carZ;
+
+    // Move trees toward the camera (relative to car)
     for (let tree of this.trees) {
-      tree.position.z += this.speed * 80 * delta;
-      if (tree.position.z > 5) {
-        // Reset tree to far end and place further from road
-        tree.position.z = -this.roadLength / 2 + Math.random() * 10;
+      tree.position.z += effectiveSpeed * 80 * delta;
+      // If tree is too far ahead of car, reset it far behind
+      if (tree.position.z > carZ + this.roadLength / 2) {
+        tree.position.z = carZ - this.roadLength / 2 + Math.random() * 10;
         tree.position.x =
           (Math.random() < 0.5 ? -1 : 1) * (10 + Math.random() * 2);
       }
